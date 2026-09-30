@@ -3,6 +3,17 @@ import { createFileRoute } from "@tanstack/react-router";
 type RequestBody = { message?: unknown; website?: unknown };
 
 const requestTimes = new Map<string, number[]>();
+const MAX_FILE_BYTES = 20 * 1024 * 1024; // 20 MB
+
+type MediaKind = { method: string; field: string; label: string };
+
+function mediaKindFor(file: File): MediaKind | null {
+  const type = file.type.toLowerCase();
+  if (type.startsWith("image/")) return { method: "sendPhoto", field: "photo", label: "Photo" };
+  if (type.startsWith("video/")) return { method: "sendVideo", field: "video", label: "Video" };
+  if (type.startsWith("audio/")) return { method: "sendVoice", field: "voice", label: "Voice note" };
+  return null;
+}
 
 export const Route = createFileRoute("/api/public/send-telegram")({
   server: {
@@ -17,17 +28,49 @@ export const Route = createFileRoute("/api/public/send-telegram")({
           return Response.json({ ok: false, error: "Too many messages. Please wait a minute and try again." }, { status: 429 });
         }
 
-        let body: RequestBody;
-        try {
-          body = await request.json() as RequestBody;
-        } catch {
-          return Response.json({ ok: false, error: "Please enter a valid message." }, { status: 400 });
-        }
-        if (body.website) return Response.json({ ok: true });
+        const contentType = request.headers.get("content-type") ?? "";
+        let message = "";
+        let file: File | null = null;
 
-        const message = typeof body.message === "string" ? body.message.trim() : "";
-        if (!message || message.length > 1000) {
+        if (contentType.includes("multipart/form-data")) {
+          let form: FormData;
+          try {
+            form = await request.formData();
+          } catch {
+            return Response.json({ ok: false, error: "Please enter a valid message." }, { status: 400 });
+          }
+          if (form.get("website")) return Response.json({ ok: true });
+          const rawMessage = form.get("message");
+          message = typeof rawMessage === "string" ? rawMessage.trim() : "";
+          const rawFile = form.get("file");
+          file = rawFile instanceof File && rawFile.size > 0 ? rawFile : null;
+        } else {
+          let body: RequestBody;
+          try {
+            body = await request.json() as RequestBody;
+          } catch {
+            return Response.json({ ok: false, error: "Please enter a valid message." }, { status: 400 });
+          }
+          if (body.website) return Response.json({ ok: true });
+          message = typeof body.message === "string" ? body.message.trim() : "";
+        }
+
+        if (message.length > 1000) {
           return Response.json({ ok: false, error: "Please enter a message of 1,000 characters or fewer." }, { status: 400 });
+        }
+        if (!message && !file) {
+          return Response.json({ ok: false, error: "Please enter a message or attach a file." }, { status: 400 });
+        }
+
+        let media: MediaKind | null = null;
+        if (file) {
+          media = mediaKindFor(file);
+          if (!media) {
+            return Response.json({ ok: false, error: "Please attach a photo, video, or voice note." }, { status: 400 });
+          }
+          if (file.size > MAX_FILE_BYTES) {
+            return Response.json({ ok: false, error: "That file is too large. Please keep it under 20 MB." }, { status: 400 });
+          }
         }
 
         const appKey = process.env["LOVABLE_API_KEY"];
@@ -38,17 +81,31 @@ export const Route = createFileRoute("/api/public/send-telegram")({
           return Response.json({ ok: false, error: "Sending is not set up yet. Please try again later." }, { status: 503 });
         }
 
+        const authHeaders = {
+          Authorization: `Bearer ${appKey}`,
+          "X-Connection-Api-Key": telegramKey,
+        };
+
         requestTimes.set(ip, [...recent, now]);
         try {
-          const result = await fetch("https://connector-gateway.lovable.dev/telegram/sendMessage", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${appKey}`,
-              "X-Connection-Api-Key": telegramKey,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ chat_id: channelId, text: message, disable_web_page_preview: true }),
-          });
+          let result: Response;
+          if (file && media) {
+            const form = new FormData();
+            form.set("chat_id", channelId);
+            if (message) form.set("caption", message);
+            form.set(media.field, file, file.name || "upload");
+            result = await fetch(`https://connector-gateway.lovable.dev/telegram/${media.method}`, {
+              method: "POST",
+              headers: authHeaders,
+              body: form,
+            });
+          } else {
+            result = await fetch("https://connector-gateway.lovable.dev/telegram/sendMessage", {
+              method: "POST",
+              headers: { ...authHeaders, "Content-Type": "application/json" },
+              body: JSON.stringify({ chat_id: channelId, text: message, disable_web_page_preview: true }),
+            });
+          }
           if (!result.ok) {
             const providerError = await result.text();
             console.error(`Telegram send failed [${result.status}]: ${providerError}`);
