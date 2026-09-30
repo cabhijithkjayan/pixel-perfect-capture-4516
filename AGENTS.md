@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Route Telegram message submissions through a public TanStack server route and the linked Telegram gateway; keep provider credentials server-side because channel posting authority must never reach browser code.
