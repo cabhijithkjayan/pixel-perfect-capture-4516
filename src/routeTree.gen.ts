@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicSendTelegramRouteImport } from './routes/api/public/send-telegram'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSendTelegramRoute = ApiPublicSendTelegramRouteImport.update({
+  id: '/api/public/send-telegram',
+  path: '/api/public/send-telegram',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/send-telegram': typeof ApiPublicSendTelegramRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/send-telegram': typeof ApiPublicSendTelegramRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/send-telegram': typeof ApiPublicSendTelegramRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/send-telegram'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/send-telegram'
+  id: '__root__' | '/' | '/api/public/send-telegram'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicSendTelegramRoute: typeof ApiPublicSendTelegramRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/send-telegram': {
+      id: '/api/public/send-telegram'
+      path: '/api/public/send-telegram'
+      fullPath: '/api/public/send-telegram'
+      preLoaderRoute: typeof ApiPublicSendTelegramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicSendTelegramRoute: ApiPublicSendTelegramRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
