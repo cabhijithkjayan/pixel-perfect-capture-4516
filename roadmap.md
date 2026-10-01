@@ -1,0 +1,3 @@
+- [ ] Rename the app and its home-screen identity to PNG ME TO TIPS.
+- [ ] Add a four-icon iOS-style P → I → T → S lock and protect the sender and send endpoint.
+- [ ] Verify the locked, incorrect-code, unlocked, and relocked views.
