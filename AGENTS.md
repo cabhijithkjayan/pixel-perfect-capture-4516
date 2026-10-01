@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Route Telegram message submissions through a public TanStack server route and the linked Telegram gateway; keep provider credentials server-side because channel posting authority must never reach browser code.
+- Gate the sender UI and its public send endpoint with the same encrypted server session; hiding the UI alone cannot restrict posting.
