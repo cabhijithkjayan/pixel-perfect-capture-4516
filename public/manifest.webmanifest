@@ -1,0 +1,14 @@
+{
+  "name": "PINGME",
+  "short_name": "PINGME",
+  "description": "Send text, voice notes, images, and files to the Telegram channel.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf6f1",
+  "theme_color": "#c2501e",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
