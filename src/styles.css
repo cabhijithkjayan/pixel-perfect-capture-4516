@@ -151,6 +151,31 @@
 }
 
 @layer components {
+  .tips-home {
+    background: var(--background);
+  }
+
+  .tips-mark {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3px;
+    width: 52px;
+    height: 52px;
+    padding: 8px;
+    border-radius: 14px;
+    background: var(--foreground);
+    color: var(--background);
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 800;
+    place-items: center;
+  }
+
+  .tips-tile-time { background: oklch(0.79 0.13 185); color: oklch(0.2 0.04 190); }
+  .tips-tile-ideas { background: oklch(0.89 0.14 88); color: oklch(0.25 0.04 85); }
+  .tips-tile-places { background: oklch(0.82 0.12 30); color: oklch(0.25 0.05 30); }
+  .tips-tile-saved { background: oklch(0.76 0.1 285); color: oklch(0.23 0.06 285); }
+
   .sender-backdrop {
     background-image: radial-gradient(ellipse at 50% -15%, oklch(0.93 0.055 165), transparent 58%), linear-gradient(135deg, oklch(0.975 0.018 166), oklch(0.955 0.026 82 / 0.38));
   }

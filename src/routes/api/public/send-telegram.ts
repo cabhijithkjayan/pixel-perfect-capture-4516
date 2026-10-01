@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { isUnlocked } from "@/lib/gate.functions";
 
 type RequestBody = { message?: unknown; website?: unknown };
 
@@ -20,6 +21,9 @@ export const Route = createFileRoute("/api/public/send-telegram")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (!(await isUnlocked())) {
+          return Response.json({ ok: false, error: "Please unlock the app first." }, { status: 401 });
+        }
         const ip =
           request.headers.get("cf-connecting-ip") ??
           request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
