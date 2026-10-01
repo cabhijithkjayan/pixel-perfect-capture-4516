@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicLogoutRouteImport } from './routes/api/public/logout'
 import { Route as ApiPublicSendTelegramRouteImport } from './routes/api/public/send-telegram'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLogoutRoute = ApiPublicLogoutRouteImport.update({
+  id: '/api/public/logout',
+  path: '/api/public/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSendTelegramRoute = ApiPublicSendTelegramRouteImport.update({
@@ -25,27 +31,31 @@ const ApiPublicSendTelegramRoute = ApiPublicSendTelegramRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/logout': typeof ApiPublicLogoutRoute
   '/api/public/send-telegram': typeof ApiPublicSendTelegramRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/logout': typeof ApiPublicLogoutRoute
   '/api/public/send-telegram': typeof ApiPublicSendTelegramRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/logout': typeof ApiPublicLogoutRoute
   '/api/public/send-telegram': typeof ApiPublicSendTelegramRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/send-telegram'
+  fullPaths: '/' | '/api/public/logout' | '/api/public/send-telegram'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/send-telegram'
-  id: '__root__' | '/' | '/api/public/send-telegram'
+  to: '/' | '/api/public/logout' | '/api/public/send-telegram'
+  id: '__root__' | '/' | '/api/public/logout' | '/api/public/send-telegram'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicLogoutRoute: typeof ApiPublicLogoutRoute
   ApiPublicSendTelegramRoute: typeof ApiPublicSendTelegramRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/logout': {
+      id: '/api/public/logout'
+      path: '/api/public/logout'
+      fullPath: '/api/public/logout'
+      preLoaderRoute: typeof ApiPublicLogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/send-telegram': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicLogoutRoute: ApiPublicLogoutRoute,
   ApiPublicSendTelegramRoute: ApiPublicSendTelegramRoute,
 }
 export const routeTree = rootRouteImport

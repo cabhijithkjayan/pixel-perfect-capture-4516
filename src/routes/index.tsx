@@ -63,8 +63,36 @@ function Index() {
   const [sequence, setSequence] = useState("");
   const [checking, setChecking] = useState(false);
   const [incorrect, setIncorrect] = useState(false);
+  const exitLockSent = useRef(false);
   const unlock = useServerFn(unlockSite);
   const lock = useServerFn(lockSite);
+
+  useEffect(() => {
+    function lockOnExit() {
+      if (!unlocked || exitLockSent.current) return;
+      exitLockSent.current = true;
+      setUnlocked(false);
+      setSequence("");
+      setIncorrect(false);
+
+      const body = new Blob();
+      if (!navigator.sendBeacon("/api/public/logout", body)) {
+        void fetch("/api/public/logout", {
+          method: "POST",
+          body,
+          credentials: "same-origin",
+          keepalive: true,
+        }).catch(() => {});
+      }
+    }
+
+    window.addEventListener("popstate", lockOnExit);
+    window.addEventListener("pagehide", lockOnExit);
+    return () => {
+      window.removeEventListener("popstate", lockOnExit);
+      window.removeEventListener("pagehide", lockOnExit);
+    };
+  }, [unlocked]);
 
   async function tapLetter(letter: string) {
     if (checking) return;
@@ -77,7 +105,10 @@ function Index() {
     setChecking(true);
     try {
       const result = await unlock({ data: { sequence: next } });
-      if (result.ok) setUnlocked(true);
+      if (result.ok) {
+        exitLockSent.current = false;
+        setUnlocked(true);
+      }
       else setIncorrect(true);
     } catch {
       setIncorrect(true);
@@ -89,6 +120,7 @@ function Index() {
 
   async function relock() {
     await lock();
+    exitLockSent.current = false;
     setUnlocked(false);
     setSequence("");
     setIncorrect(false);

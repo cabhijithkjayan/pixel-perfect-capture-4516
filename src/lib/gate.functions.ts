@@ -20,6 +20,11 @@ export const isUnlocked = createServerOnlyFn(async () => {
   return session.data.unlocked === true;
 });
 
+export const clearGateSession = createServerOnlyFn(async () => {
+  const session = await useSession<GateData>(sessionConfig());
+  await session.clear();
+});
+
 export const getAccessStatus = createServerFn({ method: "GET" }).handler(async () => ({
   unlocked: await isUnlocked(),
 }));
@@ -37,7 +42,6 @@ export const unlockSite = createServerFn({ method: "POST" })
   });
 
 export const lockSite = createServerFn({ method: "POST" }).handler(async () => {
-  const session = await useSession<GateData>(sessionConfig());
-  await session.clear();
+  await clearGateSession();
   return { ok: true as const };
 });
