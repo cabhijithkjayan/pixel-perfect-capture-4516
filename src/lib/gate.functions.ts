@@ -1,4 +1,4 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { useSession } from "@tanstack/react-start/server";
 import { createHash, timingSafeEqual } from "node:crypto";
 
@@ -15,10 +15,10 @@ function sessionConfig() {
   };
 }
 
-export async function isUnlocked() {
+export const isUnlocked = createServerOnlyFn(async () => {
   const session = await useSession<GateData>(sessionConfig());
   return session.data.unlocked === true;
-}
+});
 
 export const getAccessStatus = createServerFn({ method: "GET" }).handler(async () => ({
   unlocked: await isUnlocked(),
@@ -27,8 +27,7 @@ export const getAccessStatus = createServerFn({ method: "GET" }).handler(async (
 export const unlockSite = createServerFn({ method: "POST" })
   .inputValidator((data: { sequence: string }) => data)
   .handler(async ({ data }) => {
-    const expected = process.env["SITE_PASSWORD"];
-    if (!expected) throw new Error("Access configuration is missing");
+    const expected = "PITS";
     const receivedHash = createHash("sha256").update(data.sequence, "utf8").digest();
     const expectedHash = createHash("sha256").update(expected, "utf8").digest();
     if (!timingSafeEqual(receivedHash, expectedHash)) return { ok: false as const };
