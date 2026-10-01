@@ -1,7 +1,7 @@
 {
-  "name": "PINGME",
-  "short_name": "PINGME",
-  "description": "Send text, voice notes, images, and files to the Telegram channel.",
+  "name": "PNG ME TO TIPS",
+  "short_name": "TIPS",
+  "description": "A private space for the little things that matter.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

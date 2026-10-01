@@ -5,6 +5,7 @@ import {
   File as FileIcon,
   Image as ImageIcon,
   LoaderCircle,
+  LockKeyhole,
   MessageCircle,
   Mic,
   Send,
@@ -15,6 +16,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useServerFn } from "@tanstack/react-start";
+import { getAccessStatus, lockSite, unlockSite } from "@/lib/gate.functions";
 
 type RecentMessage = { id: number; text: string; sentAt: Date };
 type SendMode = "text" | "voice" | "image" | "file" | "nudge";
@@ -29,25 +32,119 @@ const modes: { value: SendMode; label: string; icon: typeof MessageCircle }[] = 
 
 const NUDGE_COUNT = 20;
 const NUDGE_INTERVAL_MS = 5000;
+const tiles = [
+  { letter: "T", label: "Time", className: "tips-tile-time" },
+  { letter: "I", label: "Ideas", className: "tips-tile-ideas" },
+  { letter: "P", label: "Places", className: "tips-tile-places" },
+  { letter: "S", label: "Saved", className: "tips-tile-saved" },
+] as const;
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PINGME | Channel messenger" },
-      { name: "description", content: "Send text, voice notes, images, and files to the channel." },
-      { property: "og:title", content: "PINGME | Channel messenger" },
+      { title: "PNG ME TO TIPS" },
+      { name: "description", content: "PNG ME TO TIPS, a private iOS-inspired space." },
+      { property: "og:title", content: "PNG ME TO TIPS" },
       {
         property: "og:description",
-        content: "Send text, voice notes, images, and files to the channel.",
+        content: "PNG ME TO TIPS, a private iOS-inspired space.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  loader: () => getAccessStatus(),
   component: Index,
 });
 
 function Index() {
+  const initialAccess = Route.useLoaderData();
+  const [unlocked, setUnlocked] = useState(initialAccess.unlocked);
+  const [sequence, setSequence] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [incorrect, setIncorrect] = useState(false);
+  const unlock = useServerFn(unlockSite);
+  const lock = useServerFn(lockSite);
+
+  async function tapLetter(letter: string) {
+    if (checking) return;
+    setIncorrect(false);
+    const next = sequence + letter;
+    if (next.length < 4) {
+      setSequence(next);
+      return;
+    }
+    setChecking(true);
+    try {
+      const result = await unlock({ data: { sequence: next } });
+      if (result.ok) setUnlocked(true);
+      else setIncorrect(true);
+    } catch {
+      setIncorrect(true);
+    } finally {
+      setSequence("");
+      setChecking(false);
+    }
+  }
+
+  async function relock() {
+    await lock();
+    setUnlocked(false);
+    setSequence("");
+    setIncorrect(false);
+  }
+
+  if (unlocked) return <Sender onLock={() => void relock()} />;
+
+  return (
+    <main className="tips-home min-h-screen px-6 pb-12 pt-10 sm:pt-16">
+      <div className="mx-auto flex min-h-[calc(100vh-6rem)] w-full max-w-md flex-col">
+        <header className="flex items-center justify-between border-b border-border/70 pb-5">
+          <span className="text-xs font-bold uppercase text-muted-foreground">PNG ME TO TIPS</span>
+          <LockKeyhole size={17} className="text-muted-foreground" aria-label="Private" />
+        </header>
+
+        <div className="flex flex-1 flex-col justify-center py-10">
+          <div className="mb-12">
+            <span className="tips-mark" aria-hidden="true"><span>T</span><span>I</span><span>P</span><span>S</span></span>
+            <p className="mt-8 text-xs font-semibold uppercase text-muted-foreground">Your space</p>
+            <h1 className="mt-2 text-4xl font-semibold leading-tight text-foreground sm:text-5xl">PNG ME<br />TO TIPS<span className="text-primary">.</span></h1>
+          </div>
+
+          <div className="grid grid-cols-4 gap-4 sm:gap-6" aria-label="TIPS icons">
+            {tiles.map(({ letter, label, className }) => (
+              <div key={letter} className="min-w-0 text-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  aria-label={letter}
+                  disabled={checking}
+                  onClick={() => void tapLetter(letter)}
+                  className={`tips-tile ${className} mx-auto flex aspect-square h-auto w-full max-w-20 rounded-[20px] p-0 text-3xl font-semibold shadow-sm hover:brightness-95 active:scale-95 sm:text-4xl`}
+                >{letter}</Button>
+                <span className="mt-2 block text-xs font-medium text-muted-foreground">{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 flex h-7 items-center justify-center gap-3" role="status" aria-live="polite">
+            {checking ? <LoaderCircle size={18} className="animate-spin text-muted-foreground" /> : (
+              <>
+                <span className="sr-only">{incorrect ? "Try again" : `${sequence.length} of 4 selected`}</span>
+                {Array.from({ length: 4 }, (_, index) => (
+                  <span key={index} className={`size-2 rounded-full transition-colors ${incorrect ? "bg-destructive" : index < sequence.length ? "bg-primary" : "bg-border"}`} />
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+        <footer className="border-t border-border/70 pt-5 text-center text-xs text-muted-foreground">Made for the little things that matter.</footer>
+      </div>
+    </main>
+  );
+}
+
+function Sender({ onLock }: { onLock: () => void }) {
   const [message, setMessage] = useState("");
   const [website, setWebsite] = useState("");
   const [sending, setSending] = useState(false);
@@ -274,11 +371,9 @@ function Index() {
             <span className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <MessageCircle aria-hidden="true" size={21} />
             </span>
-            <span className="text-sm font-semibold text-foreground">PINGME</span>
+            <span className="text-sm font-semibold text-foreground">PNG ME TO TIPS</span>
           </div>
-          <span className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            <span className="size-2 rounded-full bg-success" /> Connected
-          </span>
+          <Button variant="ghost" size="sm" onClick={onLock} aria-label="Lock app" title="Lock app" className="text-muted-foreground"><LockKeyhole size={17} /> Lock</Button>
         </header>
 
         <section
