@@ -104,6 +104,7 @@
 }
 
 .dark {
+  color: var(--foreground);
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);
@@ -162,13 +163,18 @@
     width: 52px;
     height: 52px;
     padding: 8px;
-    border-radius: 14px;
-    background: var(--foreground);
-    color: var(--background);
+    border: 0;
+    background: transparent;
+    color: oklch(0 0 0);
     font-size: 12px;
     line-height: 1;
     font-weight: 800;
     place-items: center;
+    cursor: pointer;
+  }
+
+  .dark .tips-mark {
+    color: var(--foreground);
   }
 
   .tips-tile-time { background: oklch(0.79 0.13 185); color: oklch(0.2 0.04 190); }
@@ -178,6 +184,10 @@
 
   .sender-backdrop {
     background-image: radial-gradient(ellipse at 50% -15%, oklch(0.93 0.055 165), transparent 58%), linear-gradient(135deg, oklch(0.975 0.018 166), oklch(0.955 0.026 82 / 0.38));
+  }
+
+  .sender-backdrop.dark {
+    background-image: radial-gradient(ellipse at 50% -15%, oklch(0.3 0.055 190), transparent 58%), linear-gradient(135deg, oklch(0.13 0.035 255), oklch(0.2 0.045 190));
   }
 
   .message-textarea {

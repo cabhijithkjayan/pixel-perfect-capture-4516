@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  ArrowLeft,
   Clock3,
   File as FileIcon,
   Image as ImageIcon,
@@ -32,6 +33,8 @@ const modes: { value: SendMode; label: string; icon: typeof MessageCircle }[] = 
 
 const NUDGE_COUNT = 20;
 const NUDGE_INTERVAL_MS = 5000;
+const SECRET_LINK =
+  "https://cozy-four.lovable.app/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAdGRleAUrY9ZleHRuA2FlbQIxMQBwZG9mAmZkaWQWUPdwjWLu4W4rbaXB4yqiPtB7dxSp_XNydGMGYXBwX2lkDzEyNDAyNDU3NDI4NzQxNAABp2JueT16bs_Ki_tSuuG5mqr4fTYzlTponCe8mGKUzh-oAbdOJJ9qzQJCc6L7_aem_H9vakYFR4a81vba4zze10w";
 const tiles = [
   { letter: "T", label: "Time", className: "tips-tile-time" },
   { letter: "I", label: "Ideas", className: "tips-tile-ideas" },
@@ -42,12 +45,12 @@ const tiles = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PNG ME TO TIPS" },
-      { name: "description", content: "PNG ME TO TIPS, a private iOS-inspired space." },
-      { property: "og:title", content: "PNG ME TO TIPS" },
+      { title: "IOS TIPS" },
+      { name: "description", content: "IOS TIPS, a private iOS-inspired space." },
+      { property: "og:title", content: "IOS TIPS" },
       {
         property: "og:description",
-        content: "PNG ME TO TIPS, a private iOS-inspired space.",
+        content: "IOS TIPS, a private iOS-inspired space.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -64,6 +67,7 @@ function Index() {
   const [checking, setChecking] = useState(false);
   const [incorrect, setIncorrect] = useState(false);
   const exitLockSent = useRef(false);
+  const logoTapCount = useRef(0);
   const unlock = useServerFn(unlockSite);
   const lock = useServerFn(lockSite);
 
@@ -118,6 +122,16 @@ function Index() {
     }
   }
 
+  function tapTile(letter: string) {
+    if (letter === "S" && logoTapCount.current >= 5) {
+      logoTapCount.current = 0;
+      window.location.assign(SECRET_LINK);
+      return;
+    }
+    logoTapCount.current = 0;
+    void tapLetter(letter);
+  }
+
   async function relock() {
     await lock();
     exitLockSent.current = false;
@@ -129,18 +143,28 @@ function Index() {
   if (unlocked) return <Sender onLock={() => void relock()} />;
 
   return (
-    <main className="tips-home min-h-screen px-6 pb-12 pt-10 sm:pt-16">
+    <main className="tips-home dark min-h-screen px-6 pb-12 pt-10 sm:pt-16">
       <div className="mx-auto flex min-h-[calc(100vh-6rem)] w-full max-w-md flex-col">
         <header className="flex items-center justify-between border-b border-border/70 pb-5">
-          <span className="text-xs font-bold uppercase text-muted-foreground">PNG ME TO TIPS</span>
+          <span className="text-xs font-bold uppercase text-muted-foreground">IOS TIPS</span>
           <LockKeyhole size={17} className="text-muted-foreground" aria-label="Private" />
         </header>
 
         <div className="flex flex-1 flex-col justify-center py-10">
           <div className="mb-12">
-            <span className="tips-mark" aria-hidden="true"><span>T</span><span>I</span><span>P</span><span>S</span></span>
+            <button
+              type="button"
+              className="tips-mark"
+              aria-label="TIPS logo"
+              onClick={() => { logoTapCount.current = Math.min(5, logoTapCount.current + 1); }}
+            >
+              <span aria-hidden="true">T</span>
+              <span aria-hidden="true">I</span>
+              <span aria-hidden="true">P</span>
+              <span aria-hidden="true">S</span>
+            </button>
             <p className="mt-8 text-xs font-semibold uppercase text-muted-foreground">Your space</p>
-            <h1 className="mt-2 text-4xl font-semibold leading-tight text-foreground sm:text-5xl">PNG ME<br />TO TIPS<span className="text-primary">.</span></h1>
+            <h1 className="mt-2 text-4xl font-semibold leading-tight text-foreground sm:text-5xl">IOS<br />TIPS</h1>
           </div>
 
           <div className="grid grid-cols-4 gap-4 sm:gap-6" aria-label="TIPS icons">
@@ -151,7 +175,7 @@ function Index() {
                   variant="ghost"
                   aria-label={letter}
                   disabled={checking}
-                  onClick={() => void tapLetter(letter)}
+                  onClick={() => tapTile(letter)}
                   className={`tips-tile ${className} mx-auto flex aspect-square h-auto w-full max-w-20 rounded-[20px] p-0 text-3xl font-semibold shadow-sm hover:brightness-95 active:scale-95 sm:text-4xl`}
                 >{letter}</Button>
                 <span className="mt-2 block text-xs font-medium text-muted-foreground">{label}</span>
@@ -396,14 +420,24 @@ function Sender({ onLock }: { onLock: () => void }) {
   }
 
   return (
-    <main className="sender-backdrop min-h-screen px-4 py-12 sm:py-20">
+    <main className="sender-backdrop dark min-h-screen px-4 py-12 sm:py-20">
       <div className="mx-auto flex w-full max-w-xl flex-col gap-10">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onLock}
+              aria-label="Back to TIPS"
+              title="Back to TIPS"
+              className="text-muted-foreground"
+            >
+              <ArrowLeft size={18} />
+            </Button>
             <span className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <MessageCircle aria-hidden="true" size={21} />
             </span>
-            <span className="text-sm font-semibold text-foreground">PNG ME TO TIPS</span>
+            <span className="text-sm font-semibold text-foreground">IOS TIPS</span>
           </div>
           <Button variant="ghost" size="sm" onClick={onLock} aria-label="Lock app" title="Lock app" className="text-muted-foreground"><LockKeyhole size={17} /> Lock</Button>
         </header>
