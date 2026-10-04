@@ -33,8 +33,7 @@ const modes: { value: SendMode; label: string; icon: typeof MessageCircle }[] = 
 
 const NUDGE_COUNT = 20;
 const NUDGE_INTERVAL_MS = 5000;
-const SECRET_LINK =
-  "https://ontarioisp.lovable.app/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAdGRleAUrY9ZleHRuA2FlbQIxMQBwZG9mAmZkaWQWUPdwjWLu4W4rbaXB4yqiPtB7dxSp_XNydGMGYXBwX2lkDzEyNDAyNDU3NDI4NzQxNAABp2JueT16bs_Ki_tSuuG5mqr4fTYzlTponCe8mGKUzh-oAbdOJJ9qzQJCc6L7_aem_H9vakYFR4a81vba4zze10w";
+const SECRET_LINK = "https://ontarioisp.lovable.app";
 const tiles = [
   { letter: "T", label: "Time", className: "tips-tile-time" },
   { letter: "I", label: "Ideas", className: "tips-tile-ideas" },
