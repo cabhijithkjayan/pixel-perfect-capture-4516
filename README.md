@@ -4,7 +4,7 @@ Implement exactly the screenshot and nothing else
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://pixel-perfect-capture-4516.lovable.app
+**Live app**: https://iostips.lovable.app
 
 ## Build with Lovable
 
